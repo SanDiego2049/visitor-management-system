@@ -12,7 +12,7 @@ import { SettingsIcon } from "lucide-react";
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const [loading, setLoading] = useState(true);
-  const [saveStatus, setSaveStatus] = useState(null);
+  // const [saveStatus, setSaveStatus] = useState(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [formData, setFormData] = useState({
     profile: {
@@ -245,7 +245,7 @@ const Settings = () => {
               {renderTabContent()}
 
               {/* Save Button */}
-              <SaveButton saveStatus={saveStatus} />
+              {/* <SaveButton saveStatus={saveStatus} /> */}
             </form>
           </div>
         </div>
