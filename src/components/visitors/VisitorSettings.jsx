@@ -48,7 +48,7 @@ const VisitorSettings = () => {
     const timer = setTimeout(() => {
       setFormData({
         profile: {
-          fullName: "John Visitor",
+          fullName: "John Doe",
           email: "john@visitorcompany.com",
           phone: "+1 (555) 987-6543",
           company: "Visitor Company Inc.",
