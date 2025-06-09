@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { LogIn, UserPlus, Eye, EyeOff, Moon, Sun } from "lucide-react";
+import { LogIn, UserPlus, Eye, EyeOff } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import toast from "react-hot-toast";
 
@@ -27,7 +27,7 @@ const Login = () => {
   const redirectBasedOnRole = (role) => {
     switch (role) {
       case "admin":
-        navigate("/admin/dashboard");
+        navigate("/admin");
         break;
       case "visitor":
         navigate("/visitor");
@@ -43,48 +43,45 @@ const Login = () => {
     setError("");
 
     try {
-      const body = new URLSearchParams();
-      body.append("grant_type", "password");
-      body.append("username", email);
-      body.append("password", password);
-      body.append("client_id", "string");
-      body.append("client_secret", "string");
+      // Simulate API loading time
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const response = await fetch("https://taskapp-self.vercel.app/token", {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: body.toString(),
-      });
+      // Get users from localStorage or initialize empty array if not exists
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
 
-      if (!response.ok) {
-        throw new Error("Login failed");
+      // Find user with matching email
+      const user = users.find((u) => u.email === email);
+
+      if (!user) {
+        throw new Error("User not found");
       }
 
-      const data = await response.json();
-      console.log("Login successful:", data);
+      // Simple password verification (in real app, would use proper hashing)
+      if (user.password !== password) {
+        throw new Error("Invalid password");
+      }
 
-      localStorage.setItem("access_token", data.access_token);
-      const fullName = data.full_name || "User";
-      localStorage.setItem("full_name", fullName);
+      // Create authentication token (simple random string for demo)
+      const token = Math.random().toString(36).substring(2, 15);
 
-      let userRole = data.role;
-      if (!userRole) {
-        if (email.includes("admin")) {
-          userRole = "admin";
-        } else {
-          userRole = "visitor";
-        }
+      // Store authentication data
+      localStorage.setItem("access_token", token);
+      localStorage.setItem("full_name", user.name || "User");
+
+      // Determine user role based on email
+      let userRole = "visitor";
+      if (email.includes("admin")) {
+        userRole = "admin";
       }
 
       localStorage.setItem("user_role", userRole);
+      localStorage.setItem("current_user_email", email);
+
       toast.success("Login successful!");
       redirectBasedOnRole(userRole);
     } catch (err) {
       console.error(err);
-      setError("Failed to login. Please try again.");
+      setError("Invalid email or password. Please try again.");
       toast.error("Login failed. Please try again.");
     } finally {
       setLoading(false);

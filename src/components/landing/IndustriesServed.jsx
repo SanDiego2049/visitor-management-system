@@ -14,37 +14,37 @@ const industries = [
     name: "Corporate Offices",
     description: "Secure and manage guest visits across corporate campuses.",
     icon: <Building className="w-8 h-8" />,
-    href: "/industries/corporate",
+    href: "/signup",
   },
   {
     name: "Healthcare",
     description: "Ensure safety and compliance for patients and visitors.",
     icon: <Stethoscope className="w-8 h-8" />,
-    href: "/industries/healthcare",
+    href: "/signup",
   },
   {
     name: "Education",
     description: "Streamline check-ins and enhance student safety.",
     icon: <GraduationCap className="w-8 h-8" />,
-    href: "/industries/education",
+    href: "/signup",
   },
   {
     name: "Manufacturing",
     description: "Track contractor and visitor access across facilities.",
     icon: <Factory className="w-8 h-8" />,
-    href: "/industries/manufacturing",
+    href: "/signup",
   },
   {
     name: "Hospitality",
     description: "Create a welcoming and secure experience for guests.",
     icon: <Hotel className="w-8 h-8" />,
-    href: "/industries/hospitality",
+    href: "/signup",
   },
   {
     name: "Transportation",
     description: "Monitor and manage visitor access at transport hubs.",
     icon: <Bus className="w-8 h-8" />,
-    href: "/industries/transportation",
+    href: "/signup",
   },
 ];
 
@@ -120,7 +120,7 @@ const IndustriesServed = () => {
 
         <div className="mt-12">
           <a
-            href="/industries"
+            href="/signup"
             className={`inline-block px-6 py-3 font-medium rounded-lg transition-colors duration-300 ${
               isDarkMode
                 ? "bg-sky-600 hover:bg-sky-500 text-white"

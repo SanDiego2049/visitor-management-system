@@ -28,7 +28,7 @@ const pricingPlans = {
         "SMS alerts",
       ],
       cta: "Choose Plan",
-      link: "/checkout",
+      link: "/signup",
       isPopular: true,
     },
     {
@@ -42,7 +42,7 @@ const pricingPlans = {
         "API access",
       ],
       cta: "Contact Sales",
-      link: "/contact-sales",
+      link: "/signup",
       isPopular: false,
     },
   ],

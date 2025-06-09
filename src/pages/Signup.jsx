@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { LogIn, UserPlus, Eye, EyeOff, Sun, Moon } from "lucide-react";
+import { LogIn, UserPlus, Eye, EyeOff } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import toast from "react-hot-toast";
 
 const Signup = () => {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -21,88 +22,52 @@ const Signup = () => {
     const loadingToastId = toast.loading("Creating account...");
 
     try {
-      const response = await fetch("YOUR_NEW_BACKEND_API_URL/token", {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password, full_name: fullName }),
-      });
+      // Simulate API loading time
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      if (!response.ok) {
-        const errorData = await response.json();
+      // Get existing users or initialize with empty array
+      const existingUsers = JSON.parse(localStorage.getItem("users") || "[]");
 
-        if (
-          response.status === 400 &&
-          errorData.detail?.includes("Email already registered")
-        ) {
-          setError("User already exists. Please log in.");
-          toast.error("User already exists. Please log in.", {
-            id: loadingToastId,
-          });
-        } else {
-          setError("Something went wrong. Please try again.");
-          toast.error("Signup failed. Please try again.", {
-            id: loadingToastId,
-          });
-        }
-
-        console.log(errorData);
+      // Check if email already exists
+      if (existingUsers.some((user) => user.email === email)) {
+        setError("User already exists. Please log in.");
+        toast.error("User already exists. Please log in.", {
+          id: loadingToastId,
+        });
         setLoading(false);
         return;
       }
 
-      // Auto login after signup
-      const body = new URLSearchParams();
-      body.append("grant_type", "password");
-      body.append("username", email);
-      body.append("password", password);
-      body.append("client_id", "string");
-      body.append("client_secret", "string");
+      // Create new user object
+      const newUser = {
+        id: Date.now().toString(),
+        name: fullName,
+        email,
+        phone,
+        password, // In a real app, you'd hash this password
+        createdAt: new Date().toISOString(),
+      };
 
-      const loginResponse = await fetch(
-        "https://taskapp-self.vercel.app/token",
-        {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: body.toString(),
-        }
+      // Add user to the existing users array
+      existingUsers.push(newUser);
+
+      // Save updated user array back to localStorage
+      localStorage.setItem("users", JSON.stringify(existingUsers));
+
+      // Set current user info in localStorage
+      localStorage.setItem(
+        "access_token",
+        Math.random().toString(36).substring(2, 15)
       );
-
-      if (!loginResponse.ok) {
-        throw new Error("Login after registration failed");
-      }
-
-      const loginData = await loginResponse.json();
-      localStorage.setItem("access_token", loginData.access_token);
-
-      const userProfileResponse = await fetch(
-        "YOUR_NEW_BACKEND_API_URL/token",
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${loginData.access_token}`,
-            Accept: "application/json",
-          },
-        }
-      );
-
-      if (!userProfileResponse.ok) {
-        throw new Error("Failed to fetch user profile");
-      }
-
-      const userProfile = await userProfileResponse.json();
-      localStorage.setItem("user_full_name", userProfile.full_name);
+      localStorage.setItem("full_name", fullName);
+      localStorage.setItem("user_role", "visitor");
+      localStorage.setItem("current_user_email", email);
 
       toast.success("Account created! Redirecting...", { id: loadingToastId });
 
       setTimeout(() => {
-        navigate("/dashboard");
-      }, 5000);
+        navigate("/visitor");
+      }, 2000);
     } catch (err) {
       console.error(err);
       setError("Something went wrong. Please try again.");
@@ -117,7 +82,7 @@ const Signup = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
       <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-md w-full max-w-md animate-fade-in-up border border-gray-100 dark:border-gray-700">
         <h1 className="text-3xl font-bold mb-6 text-center text-gray-800 dark:text-white">
-          Create an Account
+          Create Account
         </h1>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
@@ -151,6 +116,21 @@ const Signup = () => {
             />
           </div>
 
+          {/* Phone */}
+          <div>
+            <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-300">
+              Phone Number
+            </label>
+            <input
+              type="tel"
+              placeholder="555-1234"
+              className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-white dark:bg-gray-700 text-gray-800 dark:text-white"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+            />
+          </div>
+
           {/* Password */}
           <div className="relative">
             <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-300">
@@ -167,7 +147,7 @@ const Signup = () => {
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-13 -translate-y-1/2 text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
+              className="absolute right-3 top-11 text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
               tabIndex={-1}
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}

@@ -10,7 +10,7 @@ import { Settings } from "lucide-react";
 const VisitorSettings = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const [loading, setLoading] = useState(true);
-  const [saveStatus, setSaveStatus] = useState(null);
+  // const [saveStatus, setSaveStatus] = useState(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [formData, setFormData] = useState({
     profile: {
@@ -111,18 +111,18 @@ const VisitorSettings = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setSaveStatus("saving");
+    // setSaveStatus("saving");
 
-    // Simulate API call to save settings
-    setTimeout(() => {
-      setSaveStatus("saved");
-      toast.success("Visitor settings saved successfully");
+    // // Simulate API call to save settings
+    // setTimeout(() => {
+    //   setSaveStatus("saved");
+    //   toast.success("Visitor settings saved successfully");
 
-      // Reset the status after 3 seconds
-      setTimeout(() => {
-        setSaveStatus(null);
-      }, 3000);
-    }, 1500);
+    //   // Reset the status after 3 seconds
+    //   setTimeout(() => {
+    //     setSaveStatus(null);
+    //   }, 3000);
+    // }, 1500);
   };
 
   if (loading) {
@@ -193,7 +193,7 @@ const VisitorSettings = () => {
               {renderTabContent()}
 
               {/* Save Button */}
-              <SaveButton saveStatus={saveStatus} />
+              {/* <SaveButton saveStatus={saveStatus} /> */}
             </form>
           </div>
         </div>
