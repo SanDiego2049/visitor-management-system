@@ -13,17 +13,14 @@ const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in
     const token = localStorage.getItem("access_token");
     const userRole = localStorage.getItem("user_role");
 
     if (token) {
-      // Redirect based on role if already logged in
       redirectBasedOnRole(userRole);
     }
   }, [navigate]);
 
-  // Function to handle role-based redirects
   const redirectBasedOnRole = (role) => {
     switch (role) {
       case "admin":
@@ -43,46 +40,64 @@ const Login = () => {
     setError("");
 
     try {
-      // Simulate API loading time
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const loginResponse = await fetch(
+        "https://phawaazvms.onrender.com/api/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
-      // Get users from localStorage or initialize empty array if not exists
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      const loginData = await loginResponse.json();
 
-      // Find user with matching email
-      const user = users.find((u) => u.email === email);
-
-      if (!user) {
-        throw new Error("User not found");
+      if (!loginResponse.ok) {
+        throw new Error(loginData.message || "Invalid email or password.");
       }
 
-      // Simple password verification (in real app, would use proper hashing)
-      if (user.password !== password) {
-        throw new Error("Invalid password");
+      const { token: access_token, user } = loginData.data;
+
+      if (!access_token || !user) {
+        throw new Error(
+          "Login successful, but missing token or user data in response."
+        );
       }
 
-      // Create authentication token (simple random string for demo)
-      const token = Math.random().toString(36).substring(2, 15);
+      const fullName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
+      const userRole = user.role || "visitor";
+      const currentUserEmail = user.email;
 
-      // Store authentication data
-      localStorage.setItem("access_token", token);
-      localStorage.setItem("full_name", user.name || "User");
-
-      // Determine user role based on email
-      let userRole = "visitor";
-      if (email.includes("admin")) {
-        userRole = "admin";
-      }
-
+      localStorage.setItem("access_token", access_token);
+      localStorage.setItem("full_name", fullName);
       localStorage.setItem("user_role", userRole);
-      localStorage.setItem("current_user_email", email);
-
-      toast.success("Login successful!");
+      localStorage.setItem("current_user_email", currentUserEmail);
+      localStorage.setItem(
+        "profile_data",
+        JSON.stringify({
+          id: user._id || user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          fullName: fullName,
+          email: user.email,
+          role: user.role,
+          phone: user.phone || "",
+          photo: user.photo || "default-avatar.png",
+          isActive: user.isActive || true,
+          lastLogin: user.lastLogin || new Date().toISOString(),
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt || new Date().toISOString(),
+        })
+      );
+      toast.success(`Login successful! Welcome, ${fullName}.`);
       redirectBasedOnRole(userRole);
     } catch (err) {
-      console.error(err);
-      setError("Invalid email or password. Please try again.");
-      toast.error("Login failed. Please try again.");
+      console.error("[DEBUG] Login process error caught in handleSubmit:", err);
+      setError(
+        err.message || "An unexpected error occurred. Please try again."
+      );
+      toast.error("Login failed: " + (err.message || "Please try again."));
     } finally {
       setLoading(false);
     }
@@ -92,14 +107,13 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
       <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-md w-full max-w-md animate-fade-in-up border border-gray-100 dark:border-gray-700">
         <h1 className="text-3xl font-bold mb-6 text-center text-gray-800 dark:text-white">
-          Welcome Back
+          Welcome Back  
         </h1>
-
         <form className="space-y-4" onSubmit={handleSubmit}>
-          {/* Email */}
+          {/* Email */}       
           <div>
             <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-300">
-              Email Address
+              Email Address        
             </label>
             <input
               type="email"
@@ -110,11 +124,10 @@ const Login = () => {
               required
             />
           </div>
-
-          {/* Password */}
+          {/* Password */}         
           <div className="relative">
             <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-300">
-              Password
+              Password            
             </label>
             <input
               type={showPassword ? "text" : "password"}
@@ -130,17 +143,15 @@ const Login = () => {
               className="absolute right-3 top-13 transform -translate-y-1/2 text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
               tabIndex={-1}
             >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}         
             </button>
           </div>
-
-          {/* Error Message */}
+          {/* Error Message */} 
           {error && (
             <div className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-300 p-2 rounded-lg text-center">
-              {error}
+              {error} 
             </div>
           )}
-
           {/* Submit Button */}
           <button
             type="submit"
@@ -164,8 +175,7 @@ const Login = () => {
             )}
           </button>
         </form>
-
-        {/* Divider */}
+        {/* Divider */} 
         <div className="flex items-center my-6">
           <hr className="flex-grow border-t border-gray-300 dark:border-gray-600" />
           <span className="mx-4 text-gray-500 dark:text-gray-400 font-semibold">
@@ -173,27 +183,25 @@ const Login = () => {
           </span>
           <hr className="flex-grow border-t border-gray-300 dark:border-gray-600" />
         </div>
-
-        {/* Google Login Button */}
+        {/* Google Login Button */} 
         <button
           type="button"
           className="w-full flex items-center justify-center gap-2 border border-gray-300 dark:border-gray-600 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-transform hover:scale-105"
         >
-          <FcGoogle size={24} />
+          <FcGoogle size={24} /> 
           <span className="font-semibold text-gray-800 dark:text-gray-200">
-            Log In with Google
+            Log In with Google        
           </span>
         </button>
-
-        {/* Link to Signup */}
+        {/* Link to Signup */}   
         <p className="mt-6 text-center text-gray-600 dark:text-gray-400">
-          Don't have an account?{" "}
+          Don't have an account?      
           <Link
             to="/signup"
             className="text-blue-600 dark:text-blue-400 font-semibold hover:underline flex items-center justify-center gap-1"
           >
             <UserPlus size={18} />
-            Sign Up
+            Sign Up  
           </Link>
         </p>
       </div>

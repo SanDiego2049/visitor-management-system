@@ -12,7 +12,6 @@ const DashboardLayout = ({
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(window.innerWidth < 768);
 
-  // Handle window resize for responsive sidebar
   const handleResize = () => {
     if (window.innerWidth < 768) setIsCollapsed(true);
     else setIsCollapsed(false);
@@ -25,7 +24,6 @@ const DashboardLayout = ({
     };
   }, []);
 
-  // Loading state
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center h-screen space-y-4 bg-gray-50 dark:bg-gray-900 transition-colors duration-200">

@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Outlet } from "react-router-dom";
-import { useLocation } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { useNavigate, Outlet, useLocation, Link } from "react-router-dom";
 import {
   Clipboard,
   Bell,
@@ -17,10 +15,10 @@ import StatsCard from "../../../components/reusable/StatsCard";
 import LoadingSpinner from "../../../components/reusable/LoadingSpinner";
 import VisitForm from "../../../components/visitors/Visitform";
 import FeedbackForm from "../../../components/visitors/FeedbackForm";
+
 import { useProfile } from "../../../hooks/ProfileContext";
 import { useVisit } from "../../../hooks/VisitContext";
 
-// Define navigation items for visitor dashboard
 const navItems = [
   {
     to: "",
@@ -47,20 +45,22 @@ const navItems = [
 const VisitorDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { profile } = useProfile();
+
+  const { profile, loading: profileLoading } = useProfile();
   const {
-    loading: contextLoading,
+    loading: visitContextLoading,
     getTopUpcomingVisits,
     addVisit,
     unreadNotifications,
     formatDateForDisplay,
     formatTimeForDisplay,
+    upcomingVisits,
+    visitSummary,
   } = useVisit();
 
   const isDashboardRoot = location.pathname === "/visitor";
   const currentPath = location.pathname.split("/").filter(Boolean)[1] || "";
 
-  const [loading, setLoading] = useState(contextLoading);
   const [generatedQRData, setGeneratedQRData] = useState("");
   const [topVisits, setTopVisits] = useState([]);
   const [visitStats, setVisitStats] = useState({
@@ -70,34 +70,67 @@ const VisitorDashboard = () => {
   });
 
   useEffect(() => {
-    setLoading(contextLoading);
-    if (!contextLoading && profile) {
-      const visits = getTopUpcomingVisits();
-      setTopVisits(visits);
+    console.log("=== useEffect triggered ===");
+    console.log("Dependencies:", {
+      profileLoading,
+      visitContextLoading,
+      profile: !!profile,
+      upcomingVisitsLength: upcomingVisits.length,
+      visitSummaryLength: visitSummary.length,
+    });
 
-      // Set stats based on visits data
-      setVisitStats({
-        upcoming: visits.length,
-        completed: 8, // Mock data, would come from API in real app
-        total: visits.length + 8,
-      });
+    if (!profileLoading && !visitContextLoading && profile) {
+      console.log("Conditions met, updating stats...");
+
+      const currentTopVisits = getTopUpcomingVisits();
+      console.log("Current top visits:", currentTopVisits);
+      setTopVisits(currentTopVisits);
+
+      const completedVisits = visitSummary.filter(
+        (v) => v.status === "checked-out" || v.status === "completed"
+      ).length;
+      const totalVisits = visitSummary.length;
+
+      const newStats = {
+        upcoming: upcomingVisits.length, 
+        completed: completedVisits,
+        total: totalVisits,
+      };
+
+      console.log("New stats calculated:", newStats);
+      setVisitStats(newStats);
+    } else {
+      console.log("Conditions not met, waiting...");
     }
-  }, [contextLoading, getTopUpcomingVisits, profile]);
 
-  const handleVisitSubmit = (newVisit) => {
-    const success = addVisit(newVisit);
+    console.log("=== useEffect complete ===");
+  }, [
+    profileLoading,
+    visitContextLoading,
+    profile,
+    upcomingVisits,
+    visitSummary,
+    getTopUpcomingVisits,
+  ]);
+
+  const handleVisitSubmit = async (newVisit) => {
+    console.log("=== Visit Submit Started ===");
+    console.log("New visit data:", newVisit);
+
+    const success = await addVisit(newVisit);
+    console.log("Visit submission result:", success);
 
     if (success) {
-      // Update the top visits display
-      setTopVisits(getTopUpcomingVisits());
-
-      // Show success toast
-      toast.success("Visit added successfully!");
-
-      return true;
+      console.log("Visit submitted successfully, should trigger re-fetch");
+      setTimeout(() => {
+        console.log("Post-submit state check:");
+        console.log("upcomingVisits:", upcomingVisits);
+        console.log("visitSummary:", visitSummary);
+      }, 2000);
     }
 
-    return false;
+    console.log("=== Visit Submit Complete ===");
+    return success;
   };
 
   const handleQRGenerated = (qrData) => {
@@ -110,11 +143,10 @@ const VisitorDashboard = () => {
     navigate("/login");
   };
 
-  if (loading || !profile) {
+  if (profileLoading || visitContextLoading || !profile) {
     return <LoadingSpinner message="Loading your dashboard..." />;
   }
 
-  // Dashboard content to be rendered when on root path
   const DashboardContent = () => (
     <>
       <header className="mb-8">
@@ -126,7 +158,6 @@ const VisitorDashboard = () => {
         </p>
       </header>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
         <StatsCard
           title="UPCOMING VISITS"
@@ -153,9 +184,7 @@ const VisitorDashboard = () => {
         />
       </div>
 
-      {/* Dashboard Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Upcoming Visits */}
         <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-100 dark:border-gray-700">
           <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white flex items-center">
             <Clipboard size={20} className="mr-2 text-blue-500" />
@@ -163,9 +192,14 @@ const VisitorDashboard = () => {
           </h2>
           <div className="space-y-3">
             {topVisits.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400">
-                No upcoming visits scheduled.
-              </p>
+              <div>
+                <p className="text-gray-500 dark:text-gray-400">
+                  No upcoming visits scheduled.
+                </p>
+                <p className="text-xs text-gray-400 mt-2">
+                  Raw upcoming visits: {upcomingVisits.length}
+                </p>
+              </div>
             ) : (
               topVisits.map((visit) => (
                 <div
@@ -201,7 +235,6 @@ const VisitorDashboard = () => {
           </div>
         </div>
 
-        {/* Feedback */}
         <div className="bg-white dark:bg-gray-800 dark:text-white p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-100 dark:border-gray-700">
           <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
             Feedback
@@ -210,7 +243,6 @@ const VisitorDashboard = () => {
         </div>
       </div>
 
-      {/* Generate QR Code */}
       <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-100 dark:border-gray-700">
         <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white flex items-center">
           <QrCode size={20} className="mr-2 text-blue-500" />
@@ -226,7 +258,6 @@ const VisitorDashboard = () => {
     </>
   );
 
-  // Create the user object structure expected by DashboardLayout
   const user = {
     fullName: profile.fullName,
     role: profile.role || "Visitor",

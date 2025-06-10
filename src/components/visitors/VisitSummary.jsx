@@ -1,4 +1,3 @@
-import React from "react";
 import { useVisit } from "../../hooks/VisitContext";
 import {
   CalendarDays,
@@ -12,7 +11,6 @@ import {
 const VisitSummary = () => {
   const { visitSummary } = useVisit();
 
-  // Function to get the appropriate icon based on visit status
   const getStatusIcon = (status) => {
     switch (status) {
       case "Checked In":

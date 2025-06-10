@@ -8,14 +8,6 @@ const VisitForm = ({ onSubmit, onQRGenerated, initialQRData = "" }) => {
   const [purpose, setPurpose] = useState("");
   const [generatedQRData, setGeneratedQRData] = useState(initialQRData);
   const [showQR, setShowQR] = useState(!!initialQRData);
-
-  // Use useCallback to prevent recreation of handler functions on each render
-  const handleCompanyChange = useCallback((e) => {
-    const value = e.target.value;
-    const sentenceCase = value.charAt(0).toUpperCase() + value.slice(1);
-    setNewCompany(sentenceCase);
-  }, []);
-
   const handleDateChange = useCallback((e) => {
     setNewDate(e.target.value);
   }, []);
@@ -24,9 +16,28 @@ const VisitForm = ({ onSubmit, onQRGenerated, initialQRData = "" }) => {
     setNewTime(e.target.value);
   }, []);
 
-  const handlePurposeChange = useCallback((e) => {
-    setPurpose(e.target.value);
-  }, []);
+  const toSentenceCase = (text) => {
+    if (!text) return "";
+
+    const lowerCased = text.toLowerCase();
+
+    return lowerCased.replace(
+      /(^|\. |\! |\? )([a-z])/g,
+      (match, punctuation, letter) => {
+        return punctuation + letter.toUpperCase();
+      }
+    );
+  };
+
+  const handleCompanyChange = (e) => {
+    const sentenceCaseValue = toSentenceCase(e.target.value);
+    setNewCompany(sentenceCaseValue);
+  };
+
+  const handlePurposeChange = (e) => {
+    const sentenceCaseValue = toSentenceCase(e.target.value);
+    setPurpose(sentenceCaseValue);
+  };
 
   const handleSubmit = useCallback(
     (e) => {
@@ -44,7 +55,7 @@ const VisitForm = ({ onSubmit, onQRGenerated, initialQRData = "" }) => {
 
       if (success) {
         const qrData = JSON.stringify({
-          fullName: "User", // Will be replaced with actual user name by parent
+          fullName: "User", 
           company: newCompany,
           date: newDate,
           time: newTime,
@@ -62,7 +73,6 @@ const VisitForm = ({ onSubmit, onQRGenerated, initialQRData = "" }) => {
     [newCompany, newDate, newTime, purpose, onSubmit, onQRGenerated]
   );
 
-  // Use effect to update local QR data state when parent passes new data
   useEffect(() => {
     if (initialQRData) {
       setGeneratedQRData(initialQRData);
@@ -70,7 +80,6 @@ const VisitForm = ({ onSubmit, onQRGenerated, initialQRData = "" }) => {
     }
   }, [initialQRData]);
 
-  // Reset form function
   const handleReset = useCallback(() => {
     setNewCompany("");
     setNewDate("");
