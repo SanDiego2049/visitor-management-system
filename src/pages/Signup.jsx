@@ -5,75 +5,94 @@ import { FcGoogle } from "react-icons/fc";
 import toast from "react-hot-toast";
 
 const Signup = () => {
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState([]);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setErrors([]);
 
     const loadingToastId = toast.loading("Creating account...");
 
+    const userData = {
+      email,
+      password,
+      firstName,
+      lastName,
+      phone,
+      photo: "default-avatar.png",
+    };
+
     try {
-      // Simulate API loading time
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch(
+        "https://phawaazvms.onrender.com/api/auth/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(userData),
+        }
+      );
 
-      // Get existing users or initialize with empty array
-      const existingUsers = JSON.parse(localStorage.getItem("users") || "[]");
+      const data = await response.json();
 
-      // Check if email already exists
-      if (existingUsers.some((user) => user.email === email)) {
-        setError("User already exists. Please log in.");
-        toast.error("User already exists. Please log in.", {
+      if (!response.ok) {
+        if (
+          data.errors &&
+          Array.isArray(data.errors) &&
+          data.errors.length > 0
+        ) {
+          const specificErrors = data.errors.map((err) => err.msg);
+          setErrors(specificErrors);
+          toast.error("Please correct the following errors:", {
+            id: loadingToastId,
+          });
+        } else {
+          const errorMessage =
+            data.message || "Failed to create account. Please try again.";
+          setErrors([errorMessage]);
+          toast.error(errorMessage, { id: loadingToastId });
+        }
+      } else {
+        const existingUsers = JSON.parse(
+          localStorage.getItem("client_user_names") || "[]"
+        );
+        const newUserEntry = {
+          email: email,
+          firstName: firstName,
+          lastName: lastName,
+        };
+        const updatedUsers = existingUsers.filter(
+          (user) => user.email !== email
+        );
+        updatedUsers.push(newUserEntry);
+        localStorage.setItem("client_user_names", JSON.stringify(updatedUsers));
+
+        toast.success("Account created! Please log in.", {
           id: loadingToastId,
         });
-        setLoading(false);
-        return;
+
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
       }
-
-      // Create new user object
-      const newUser = {
-        id: Date.now().toString(),
-        name: fullName,
-        email,
-        phone,
-        password, // In a real app, you'd hash this password
-        createdAt: new Date().toISOString(),
-      };
-
-      // Add user to the existing users array
-      existingUsers.push(newUser);
-
-      // Save updated user array back to localStorage
-      localStorage.setItem("users", JSON.stringify(existingUsers));
-
-      // Set current user info in localStorage
-      localStorage.setItem(
-        "access_token",
-        Math.random().toString(36).substring(2, 15)
-      );
-      localStorage.setItem("full_name", fullName);
-      localStorage.setItem("user_role", "visitor");
-      localStorage.setItem("current_user_email", email);
-
-      toast.success("Account created! Redirecting...", { id: loadingToastId });
-
-      setTimeout(() => {
-        navigate("/visitor");
-      }, 2000);
     } catch (err) {
-      console.error(err);
-      setError("Something went wrong. Please try again.");
-
-      toast.error("Signup failed. Please try again.", { id: loadingToastId });
-
+      console.error("Signup Error:", err);
+      const errorMessage =
+        err.message || "Network error. Please check your connection.";
+      setErrors([errorMessage]);
+      toast.error(errorMessage, { id: loadingToastId });
+    } finally {
       setLoading(false);
     }
   };
@@ -86,17 +105,32 @@ const Signup = () => {
         </h1>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
-          {/* Full Name */}
+          {/* First Name */}
           <div>
             <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-300">
-              Full Name
+              First Name
             </label>
             <input
               type="text"
-              placeholder="John Doe"
+              placeholder="John"
               className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-white dark:bg-gray-700 text-gray-800 dark:text-white"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              required
+            />
+          </div>
+
+          {/* Last Name */}
+          <div>
+            <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-300">
+              Last Name
+            </label>
+            <input
+              type="text"
+              placeholder="Doe"
+              className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-white dark:bg-gray-700 text-gray-800 dark:text-white"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
               required
             />
           </div>
@@ -123,7 +157,7 @@ const Signup = () => {
             </label>
             <input
               type="tel"
-              placeholder="555-1234"
+              placeholder="+1234567890"
               className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-white dark:bg-gray-700 text-gray-800 dark:text-white"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
@@ -154,10 +188,17 @@ const Signup = () => {
             </button>
           </div>
 
-          {/* Error Message */}
-          {error && (
-            <div className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-300 p-2 rounded-lg text-center">
-              {error}
+          {/* Error Messages Display */}
+          {errors.length > 0 && (
+            <div className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-300 p-2 rounded-lg">
+              <p className="font-semibold mb-1">
+                Please correct the following:
+              </p>
+              <ul className="list-disc list-inside">
+                {errors.map((msg, index) => (
+                  <li key={index}>{msg}</li>
+                ))}
+              </ul>
             </div>
           )}
 

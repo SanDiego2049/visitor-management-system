@@ -1,6 +1,6 @@
 import { Menu, LogOut } from "lucide-react";
 import UserAvatar from "../reusable/UserAvatar";
-import NavMenu from "../reusable/NavMenu"; 
+import NavMenu from "../reusable/NavMenu";
 
 const Sidebar = ({
   user,
@@ -10,7 +10,7 @@ const Sidebar = ({
   isCollapsed,
   setIsCollapsed,
   handleLogout,
-  currentPath, 
+  currentPath,
 }) => {
   return (
     <aside

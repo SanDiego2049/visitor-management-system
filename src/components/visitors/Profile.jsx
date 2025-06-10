@@ -32,6 +32,9 @@ const Profile = () => {
     const file = e.target.files[0];
     if (file) {
       // Convert file to data URL for preview and storage
+      // NOTE: Storing images as Data URLs in your database is generally not recommended
+      // for production apps due to size and performance. For production, you'd
+      // upload the image to a cloud storage service (e.g., Cloudinary, S3) and store the URL.
       const reader = new FileReader();
       reader.onloadend = () => {
         const dataUrl = reader.result;
@@ -47,10 +50,15 @@ const Profile = () => {
     setIsSaving(true);
 
     try {
+      const nameParts = formData.fullName.split(" ");
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || "";
+
       const updatedData = {
-        name: formData.fullName, // Use 'name' to match our user object structure
+        firstName: firstName, 
+        lastName: lastName, 
         phone: formData.phone,
-        avatarUrl: formData.avatarUrl,
+        photo: formData.avatarUrl, 
       };
 
       const result = await updateProfile(updatedData);

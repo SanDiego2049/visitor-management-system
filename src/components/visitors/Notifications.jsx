@@ -1,4 +1,3 @@
-import React from "react";
 import { useVisit } from "../../hooks/VisitContext";
 import {
   BookOpenCheck,
